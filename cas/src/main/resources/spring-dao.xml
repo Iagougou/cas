@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+    <!--默认库权限库 -->
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${jdbc_url}" />
+        <property name="username" value="${jdbc_username}" />
+        <property name="password" value="${jdbc_password}" />
+        <property name="name" value="${jdbc_name}" />
+        <property name="initialSize" value="${initialSize}" />
+        <property name="maxActive" value="${maxActive}" />
+        <property name="minIdle" value="${minIdle}" />
+        <property name="maxWait" value="${maxWait}" />
+
+        <property name="validationQuery" value="${jdbc_validationQuery}" />
+        <property name="testWhileIdle" value="${testWhileIdle}" />
+        <property name="testOnBorrow" value="${testOnBorrow}" />
+        <property name="testOnReturn" value="${testOnReturn}" />
+
+        <property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}" />
+        <property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}" />
+
+        <property name="removeAbandoned" value="false" />
+        <property name="logAbandoned" value="${logAbandoned}" />
+
+        <property name="filters" value="${filters}" />
+    </bean>
+
+    <!-- 2. 创建SqlSession的工厂 -->
+    <!-- dataSource:引用数据源，统一加载配置-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+
+        <property name="dataSource" ref="dataSource" ></property>
+
+        <!-- 自动配置别名-作用类似mybatis-config.xml的别名 -->
+        <property name="typeAliasesPackage" value="com.hlf.cas.common" />
+
+        <!-- 当mybatis的xml文件和mapper接口不在相同包下时，需要用mapperLocations属性指定xml文件的路径 -->
+        <!-- *是个通配符，代表所有的文件，**代表所有目录下 -->
+        <!-- 自动扫描mapping.xml文件 -->
+        <property name="mapperLocations" value="classpath:mybatis/*.xml"/>
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+    </bean>
+
+    <!-- 3. 自动扫描加载Sql映射文件/接口 -->
+    <bean id="mapperScannerConfigurer"  class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+
+        <!-- sqlSessionFactoryBeanName：代表延迟加载-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+
+        <!-- basePackage:指定sql映射文件/接口所在的包（自动扫描）-->
+        <property name="basePackage" value="com.hlf.cas.dao.mapper"></property>
+    </bean>
+
+    <!-- 4. 事务管理 -->
+    <!-- dataSource:引用上面定义的数据源 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 5. 使用声明式事务 -->
+    <!-- transaction-manager：引用上面定义的事务管理器 -->
+    <!-- 配置 Annotation 驱动，扫描@Transactional注解的类定义事务  -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+</beans>

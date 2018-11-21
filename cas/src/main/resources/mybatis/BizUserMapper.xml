@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlf.cas.common.BizUser">
+    <resultMap id="BaseResultMap" type="com.hlf.cas.common.BizUser">
+        <id column="id"  property="id" />
+        <result column="biz_id"  property="bizId" />
+        <result column="user_id"  property="userId" />
+        <result column="creator"  property="creator" />
+        <result column="create_time"  property="createTime" />
+        <result column="updater"  property="updater" />
+        <result column="update_time"  property="updateTime" />
+        <result column="status"  property="status" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,biz_id,user_id,creator,create_time,updater, update_time,status
+    </sql>
+
+    <insert id="batchAddBizUser">
+        insert into biz_user ( biz_id,user_id,creator,create_time,updater,update_time,status)
+        values
+        <foreach collection="bizUserList" item="item"  separator=",">
+            (#{item.bizId},#{item.userId},#{item.creator},#{item.createTime},#{item.updater},#{item.updateTime},#{item.status})
+        </foreach>
+    </insert>
+
+
+    <select id="getBizUserByBizId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from biz_user where status=1
+        <choose>
+            <when test="bizIdList!=null and bizIdList.size()>0">
+                and biz_id in
+                <foreach collection="bizIdList" item="item"  open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                and 1=0
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getBizUserByUserId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from biz_user where status=1 and user_id=#{userId}
+    </select>
+
+
+    <update id="removeBizUser" parameterType="com.hlf.cas.common.BizUser">
+        update biz_user set status=2,updater=#{updater},update_time=#{updateTime} where status=1 and user_id=#{userId} and biz_id=#{bizId}
+    </update>
+
+
+   <update id="batchDeleteBizUserRelByUserIds">
+       update biz_user
+       set status = 2
+       where user_id in
+       <foreach collection="userIds" index="index" item="userId" open="(" close=")" separator=",">
+           #{userId}
+       </foreach>
+   </update>
+
+    <delete id="deleteFakeUser">
+       delete from biz_user where user_id like 'fake_user%'
+    </delete>
+</mapper>
